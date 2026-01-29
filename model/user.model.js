@@ -18,6 +18,11 @@ const userSchema = new mongoose.Schema(
       unique: true,
       validate: [validator.isEmail, 'Enter a valid email']
     },
+    role: {
+      type: String,
+      enum: ['user', 'guide', 'lead-guide', 'admin'],
+      default: 'user'
+    },
     photo: String,
     password: {
       type: String,

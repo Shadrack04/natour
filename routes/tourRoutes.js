@@ -1,5 +1,6 @@
 const express = require('express');
 const tourController = require('./../controllers/tourController');
+const { restrict } = require('../middlewares/tours.middleware');
 
 const router = express.Router();
 
@@ -14,6 +15,6 @@ router
   .route('/:id')
   .get(tourController.getTour)
   .patch(tourController.updateTour)
-  .delete(tourController.deleteTour);
+  .delete(restrict('admin'), tourController.deleteTour);
 
 module.exports = router;
