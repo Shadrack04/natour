@@ -59,9 +59,11 @@ userSchema.methods.correctPassword = async function(
 
 userSchema.methods.passwordChangedAfter = function(jwtAt) {
   if (this.passwordLastUpdateAt) {
-    // console.log(this.passwordLastUpdateAt.getTime() / 1000);
-    // console.log(jwtAt);
-    return jwtAt < this.passwordLastUpdateAt.getTime() / 1000;
+    const changedTImeStamp = parseInt(
+      this.passwordLastUpdateAt.getTime() / 1000,
+      10
+    );
+    return jwtAt < changedTImeStamp;
   }
   return false;
 };
