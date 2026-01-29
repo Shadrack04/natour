@@ -36,7 +36,10 @@ const userSchema = new mongoose.Schema(
         },
         message: 'Confirm password must be the same as password'
       }
-    }
+    },
+    passwordLastUpdateAt: Date,
+    passwordUpdateToken: String,
+    passwordUpdateTokenExpiresAt: Date
   },
   { timestamps: true }
 );
@@ -52,6 +55,15 @@ userSchema.methods.correctPassword = async function(
   userPassword
 ) {
   return await bcrypt.compare(candidatePassword, userPassword);
+};
+
+userSchema.methods.passwordChangedAfter = function(jwtAt) {
+  if (this.passwordLastUpdateAt) {
+    // console.log(this.passwordLastUpdateAt.getTime() / 1000);
+    // console.log(jwtAt);
+    return jwtAt < this.passwordLastUpdateAt.getTime() / 1000;
+  }
+  return false;
 };
 
 userSchema.index({ email: 1 }, { unique: true });

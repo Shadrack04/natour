@@ -35,6 +35,14 @@ const authMiddleware = async (req, res, next) => {
       throw error;
     }
 
+    if (user.passwordChangedAfter(decoded.iat)) {
+      const error = new Error(
+        'Unauthorized: Password was recently updated, please login again'
+      );
+      error.statusCode = 401;
+      throw error;
+    }
+
     req.user = user;
     next();
   } catch (error) {

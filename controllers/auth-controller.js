@@ -17,7 +17,14 @@ exports.signup = async (req, res, next) => {
   const session = await mongoose.startSession();
   session.startTransaction();
   try {
-    const { name, email, password, confirmPassword, photo } = req.body;
+    const {
+      name,
+      email,
+      password,
+      confirmPassword,
+      photo,
+      passwordLastUpdateAt
+    } = req.body;
 
     if (!name || !email || !password || !confirmPassword) {
       const error = new Error('Provide all required data');
@@ -42,7 +49,8 @@ exports.signup = async (req, res, next) => {
           email,
           password,
           confirmPassword,
-          photo
+          photo,
+          passwordLastUpdateAt
         }
       ],
       { session }
