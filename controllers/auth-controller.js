@@ -117,3 +117,27 @@ exports.login = async (req, res, next) => {
     next(error);
   }
 };
+
+exports.forgotPassword = async (req, res, next) => {
+  try {
+    const { email } = req.body;
+    const user = await User.findOne({ email });
+    if (!user) {
+      const error = new Error('No user with this email');
+      error.statusCode = 404;
+      throw error;
+    }
+
+    // create reset token
+    const resetToken = user.createResetToken();
+
+    await user.save({ validateBeforeSave: false });
+
+    res.status(200).json({
+      success: true,
+      message: 'Reset Token sent to your email'
+    });
+  } catch (error) {
+    next(error);
+  }
+};

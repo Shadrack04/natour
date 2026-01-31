@@ -1,4 +1,5 @@
 /* eslint-disable node/no-unsupported-features/es-syntax */
+const crypto = require('crypto');
 const { default: mongoose } = require('mongoose');
 const bcrypt = require('bcryptjs');
 const validator = require('validator');
@@ -43,8 +44,8 @@ const userSchema = new mongoose.Schema(
       }
     },
     passwordLastUpdateAt: Date,
-    passwordUpdateToken: String,
-    passwordUpdateTokenExpiresAt: Date
+    passwordResetToken: String,
+    passwordResetTokenExpiresIn: Date
   },
   { timestamps: true }
 );
@@ -71,6 +72,19 @@ userSchema.methods.passwordChangedAfter = function(jwtAt) {
     return jwtAt < changedTImeStamp;
   }
   return false;
+};
+
+userSchema.methods.createResetToken = function() {
+  const resetToken = crypto.randomBytes(32).toString('hex');
+
+  this.passwordResetToken = crypto
+    .createHash('sha256')
+    .update(resetToken)
+    .digest('hex');
+
+  this.passwordResetTokenExpiresIn = Date.now() + 10 * 60 * 100;
+
+  return resetToken;
 };
 
 userSchema.index({ email: 1 }, { unique: true });
