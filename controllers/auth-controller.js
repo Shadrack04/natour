@@ -2,6 +2,7 @@ const { default: mongoose } = require('mongoose');
 const dotenv = require('dotenv');
 const jwt = require('jsonwebtoken');
 const User = require('../model/user.model');
+const sendEmail = require('../helpers/email');
 
 dotenv.config({ path: './config.env' });
 
@@ -130,8 +131,13 @@ exports.forgotPassword = async (req, res, next) => {
 
     // create reset token
     const resetToken = user.createResetToken();
-
     await user.save({ validateBeforeSave: false });
+
+    await sendEmail({
+      email: user.email,
+      subject: 'Reset Password',
+      message: `hello from Natours, ${resetToken}`
+    });
 
     res.status(200).json({
       success: true,
