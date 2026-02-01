@@ -1,3 +1,4 @@
+const crypto = require('crypto');
 const { default: mongoose } = require('mongoose');
 const dotenv = require('dotenv');
 const jwt = require('jsonwebtoken');
@@ -133,15 +134,59 @@ exports.forgotPassword = async (req, res, next) => {
     const resetToken = user.createResetToken();
     await user.save({ validateBeforeSave: false });
 
+    const resetURL = `${req.protocol}://${req.get(
+      'host'
+    )}/api/v1/auth/reset-password/${resetToken}`;
+
     await sendEmail({
       email: user.email,
       subject: 'Reset Password',
-      message: `hello from Natours, ${resetToken}`
+      message: `hello from Natours, ${resetURL}`
     });
 
     res.status(200).json({
       success: true,
       message: 'Reset Token sent to your email'
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.resetPassword = async (req, res, next) => {
+  try {
+    const resetToken = req.params.token;
+    const hashToken = crypto
+      .createHash('sha256')
+      .update(resetToken)
+      .digest('hex');
+
+    const user = await User.findOne({
+      passwordResetToken: hashToken,
+      passwordResetTokenExpiresIn: { $gt: Date.now() }
+    });
+
+    if (!user) {
+      const error = new Error('Invalid or expired reset token');
+      error.statusCode = 400;
+      throw error;
+    }
+
+    user.password = req.body.password;
+    user.confirmPassword = req.body.confirmPassword;
+    user.passwordResetToken = undefined;
+    user.passwordResetTokenExpiresIn = undefined;
+
+    await user.save();
+
+    const token = signJwt(user._id);
+
+    res.status(200).json({
+      success: true,
+      message: 'Login successful',
+      data: {
+        token
+      }
     });
   } catch (error) {
     next(error);
