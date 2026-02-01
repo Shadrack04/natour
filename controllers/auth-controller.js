@@ -192,3 +192,48 @@ exports.resetPassword = async (req, res, next) => {
     next(error);
   }
 };
+
+exports.updatePassword = async (req, res, next) => {
+  try {
+    const { currentPassword, newPassword, confirmPassword } = req.body;
+
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      const error = new Error('Please all required fields');
+      error.statusCode = 400;
+      throw error;
+    }
+
+    const user = await User.findOne({ email: req.user.email }).select(
+      '+password'
+    );
+
+    const isCorrectPassword = await user.correctPassword(
+      currentPassword,
+      user.password
+    );
+
+    if (!isCorrectPassword) {
+      const error = new Error('Enter the correct current password');
+      error.statusCode = 401;
+      throw error;
+    }
+
+    user.password = newPassword;
+    user.confirmPassword = confirmPassword;
+    await user.save();
+
+    user.password = undefined;
+
+    const token = signJwt(user._id);
+
+    res.status(200).json({
+      success: true,
+      message: 'Login successful',
+      data: {
+        token
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
